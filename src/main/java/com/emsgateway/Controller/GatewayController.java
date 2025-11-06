@@ -60,27 +60,38 @@ public class GatewayController {
             }
 
             HttpHeaders headers = copyHeaders(request);
-
             HttpEntity<String> entity = new HttpEntity<>(body, headers);
             HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
             System.out.println("Forwarding to: " + fullUrl + " (Method: " + method + ")");
+            System.out.println("Request body: " + body);
+            System.out.println("Request headers: " + headers);
 
-            ResponseEntity<?> response = restTemplate.exchange(
+
+            ResponseEntity<String> response = restTemplate.exchange(
                     fullUrl,
                     method,
                     entity,
                     String.class
             );
 
-            return response;
+            System.out.println("Response received: " + response.getStatusCode());
+            System.out.println("Response body: " + response.getBody());
+            System.out.println("Response headers: " + response.getHeaders());
 
-        } catch (RestClientException e) {
-            System.err.println("Service unavailable: " + e.getMessage());
-            return ResponseEntity.status(503).body("Service unavailable");
+            ResponseEntity<String> finalResponse = ResponseEntity.status(response.getStatusCode())
+                    .headers(response.getHeaders())
+                    .body(response.getBody());
+
+            System.out.println("Returning to frontend: " + finalResponse.getStatusCode() + " - " + finalResponse.getBody());
+
+
+            return finalResponse;
+
         } catch (Exception e) {
-            System.err.println("Error forwarding request: " + e.getMessage());
-            return ResponseEntity.status(502).body("Bad gateway");
+            System.err.println("Error in forwardRequest: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Gateway error: " + e.getMessage());
         }
     }
 

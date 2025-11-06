@@ -30,6 +30,13 @@ public class GatewayFilter extends OncePerRequestFilter {
 
         System.out.println("Gateway received: " + method + " " + requestPath);
 
+        // IMPORTANT: Permite OPTIONS requests să treacă fără autentificare
+        if ("OPTIONS".equals(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Permite auth endpoints să treacă fără autentificare
         if (requestPath.startsWith("/api/auth")) {
             filterChain.doFilter(request, response);
             return;
